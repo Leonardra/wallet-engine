@@ -30,7 +30,7 @@ func ConnectDB() *mongo.Client  {
 	return client
 }
 
-var DbClient *mongo.Client = ConnectDB()
+var DbClient = ConnectDB()
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
 	collection := client.Database("wallets").Collection(collectionName)

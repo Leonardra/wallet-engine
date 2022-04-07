@@ -70,3 +70,29 @@ func Test_createWallet(t *testing.T){
 }
 
 
+func Test_thatCreateWalletThrowsErrorWhenRequiredFieldsAreMissing(t *testing.T) {
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request = &http.Request{
+		Header: make(http.Header),
+	}
+	requestBody := gin.H{}
+	MockJsonRequestBody(ctx, requestBody, "POST")
+	createWalletHandler := CreateWallet()
+	createWalletHandler(ctx)
+
+	var response dto.APIResponse
+	responseString := w.Body.String()
+	err := json.Unmarshal([]byte(responseString), &response)
+	if err != nil {
+		util.ApplicationLog.Printf("ERROR UNMARSHALLING RESPONSE %v\n", err)
+	}
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusBadRequest, response.Status)
+	assert.NotNil(t, response.Timestamp)
+	t.Cleanup(func() {
+		CleanUpDbOps(ctx)
+	})
+}
+
+

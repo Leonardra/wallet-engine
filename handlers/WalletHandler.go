@@ -51,4 +51,6 @@ func CreateWallet() gin.HandlerFunc{
 			"wallet": savedWallet,
 		})
 	}
+
+
 }
