@@ -9,5 +9,6 @@ func WalletRouter(router *gin.Engine){
 	walletRoutes := router.Group("api/v1/wallet")
 	{
 		walletRoutes.POST("/", handlers.CreateWallet())
+		walletRoutes.PATCH("/debit", handlers.DebitWallet())
 	}
 }

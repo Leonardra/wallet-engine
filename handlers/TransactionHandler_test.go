@@ -17,7 +17,7 @@ func Test_debitWallet(t *testing.T){
 		AccountNumber: wallet.AccountNumber,
 	}
 
-	debitedWallet , _ := debitFromWallet(*wallet, transaction)
+	debitedWallet , _ := debitFromWallet(*wallet, &transaction)
 	util.ApplicationLog.Printf("Debited Wallet %v\n", debitedWallet)
 
 	assert.Equal(t, debitedWallet.Balance, decimal.RequireFromString("100000.10"))
@@ -31,7 +31,7 @@ func Test_debitAmountDoesNotExceedBalance(t *testing.T){
 		AccountNumber: wallet.AccountNumber,
 	}
 
-	debitedWallet, err  := debitFromWallet(*wallet, transaction)
+	debitedWallet, err  := debitFromWallet(*wallet, &transaction)
 	util.ApplicationLog.Printf("Debited Wallet %v\n", debitedWallet)
 
 	assert.Error(t, err, "debit amount cannot exceed balance")

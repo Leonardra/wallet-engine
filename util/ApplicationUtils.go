@@ -9,7 +9,7 @@ import (
 	"walletEngine/dto"
 )
 
-var ApplicationLog = log.New(os.Stdout, "wallet-service ", log.LstdFlags)
+var ApplicationLog = log.New(os.Stdout, "[wallet-service] ", log.LstdFlags)
 
 func GenerateJSONResponse(c *gin.Context, statusCode int, message string, data map[string]interface{}) {
 	c.JSON(statusCode, dto.APIResponse{

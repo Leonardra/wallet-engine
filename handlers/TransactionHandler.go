@@ -13,7 +13,7 @@ import (
 )
 
 
-func debitWallet() gin.HandlerFunc{
+func DebitWallet() gin.HandlerFunc{
 	return func(c *gin.Context){
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -25,11 +25,12 @@ func debitWallet() gin.HandlerFunc{
 			util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
 			return
 		}
-		if validationErr := validate.Struct(&transaction); validationErr != nil {
-			util.ApplicationLog.Println("validation error")
-			util.GenerateBadRequestResponse(c, validationErr.Error())
-			return
-		}
+		//util.ApplicationLog.Printf("Transaction after binding %v\n", &transaction)
+		//if validationErr := validate.Struct(&transaction); validationErr != nil {
+		//	util.ApplicationLog.Println("validation error")
+		//	util.GenerateBadRequestResponse(c, validationErr.Error())
+		//	return
+		//}
 
 		filter := bson.D{{"accountNumber", transaction.AccountNumber}}
 		err := walletCollection.FindOne(ctx, filter).Decode(&wallet)
@@ -43,17 +44,21 @@ func debitWallet() gin.HandlerFunc{
 		debitedWallet, err := debitFromWallet(wallet, transaction)
 		if err != nil {
 			util.GenerateBadRequestResponse(c, err.Error())
+			return
 		}
 
-		idFilter := bson.D{{"_id", debitedWallet.Id}}
-		updateResult, err := walletCollection.UpdateOne(ctx, idFilter, debitedWallet)
+		update := bson.M{
+			"$set": debitedWallet,
+		}
+		idFilter := bson.D{{"id", debitedWallet.Id}}
+		updateResult, err := walletCollection.UpdateOne(ctx, idFilter, update)
 		if err != nil {
-			util.ApplicationLog.Printf("Error updating wallet %v\n", err)
+			util.ApplicationLog.Printf("Error updating wallet: %v\n", err)
 			util.GenerateInternalServerErrorResponse(c, err.Error())
 			return
 		}
 
-		util.GenerateJSONResponse(c, http.StatusCreated, "Success", gin.H{
+		util.GenerateJSONResponse(c, http.StatusOK, "Success", gin.H{
 			"wallet": updateResult,
 		})
 
