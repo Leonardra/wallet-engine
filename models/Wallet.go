@@ -4,7 +4,7 @@ import (
 	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
-	configs "walletEngine/configs/util"
+	"walletEngine/util"
 )
 
 type Wallet struct{
@@ -17,11 +17,12 @@ type Wallet struct{
 }
 
 
-func  createWalletInstance(firstName string, lastName string) *Wallet{
+func  CreateWalletInstance(firstName string, lastName string) *Wallet{
 	 wallet := new(Wallet)
+	 wallet.Id = primitive.NewObjectID()
 	 wallet.FirstName = firstName
 	 wallet.LastName = lastName
-	 wallet.AccountNumber = configs.GenerateAccountNumber()
+	 wallet.AccountNumber = util.GenerateAccountNumber()
 	 wallet.Balance = decimal.RequireFromString("0.0")
 	 return wallet
 }

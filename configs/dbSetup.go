@@ -10,7 +10,8 @@ import (
 )
 
 func ConnectDB() *mongo.Client  {
-	client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoURI()))
+	config, err := LoadConfig("C:\\Users\\ADMIN\\GolandProjects\\walletEngine")
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.DBURL))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,6 +33,6 @@ func ConnectDB() *mongo.Client  {
 var DbClient *mongo.Client = ConnectDB()
 
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database("wallet").Collection(collectionName)
+	collection := client.Database("wallets").Collection(collectionName)
 	return collection
 }
