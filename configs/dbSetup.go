@@ -11,7 +11,7 @@ import (
 
 func ConnectDB() *mongo.Client  {
 	config, err := LoadConfig("C:\\Users\\ADMIN\\GolandProjects\\walletEngine")
-	client, err := mongo.NewClient(options.Client().ApplyURI(config.DBURL))
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.DB_URL))
 	if err != nil {
 		log.Fatal(err)
 	}

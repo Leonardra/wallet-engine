@@ -2,12 +2,14 @@ package configs
 
 import (
 	"github.com/spf13/viper"
+	"os"
 	"walletEngine/util"
 )
 
 
 type Config struct {
-	DBURL      string `mapstructure:"DB_URL"`
+	DB_URL      string `mapstructure:"DB_URL"`
+	SERVER_PORT  string `mapstructure:"PORT"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -26,4 +28,9 @@ func LoadConfig(path string) (config Config, err error) {
 		util.ApplicationLog.Fatal("Error unmarshalling %v\n", err)
 	}
 	return
+}
+
+func EnvHTTPPort() string {
+	config, _ := LoadConfig("C:\\Users\\ADMIN\\GolandProjects\\walletEngine")
+	return os.Getenv(config.SERVER_PORT)
 }
