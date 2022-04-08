@@ -14,6 +14,7 @@ type Wallet struct{
 	DateCreated   	time.Time          `json:"dateCreated" bson:"dateCreated"`
 	Balance			decimal.Decimal		`json:"balance" bson:"balance" `
 	AccountNumber	string				`json:"accountNumber" bson:"accountNumber" `
+	ActivationStatus  bool				`json:"activationStatus" bson:"activationStatus"`
 }
 
 
@@ -24,5 +25,6 @@ func  CreateWalletInstance(firstName string, lastName string) *Wallet{
 	 wallet.LastName = lastName
 	 wallet.AccountNumber = util.GenerateAccountNumber()
 	 wallet.Balance = decimal.RequireFromString("0.0")
+	 wallet.ActivationStatus = true
 	 return wallet
 }

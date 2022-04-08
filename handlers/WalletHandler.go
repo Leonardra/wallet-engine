@@ -5,10 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/shopspring/decimal"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"time"
 	"walletEngine/configs"
+	"walletEngine/dto"
 	"walletEngine/models"
 	"walletEngine/util"
 )
@@ -34,9 +37,10 @@ func CreateWallet() gin.HandlerFunc{
 		}
 
 		wallet.Id = primitive.NewObjectID()
-		wallet.DateCreated = time.Now()
+		wallet.DateCreated = time.Now().Local()
 		wallet.AccountNumber = util.GenerateAccountNumber()
 		wallet.Balance = decimal.RequireFromString("0.0")
+		wallet.ActivationStatus = true
 		util.ApplicationLog.Printf("wallet before saving %v\n", wallet)
 
 		savedWallet, err := walletCollection.InsertOne(ctx, wallet)
@@ -51,6 +55,49 @@ func CreateWallet() gin.HandlerFunc{
 			"wallet": savedWallet,
 		})
 	}
-
-
 }
+
+  func ChangeActivationStatus()gin.HandlerFunc{
+	  return func(c *gin.Context){
+		  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		  defer cancel()
+
+		  walletId := c.Param("walletId")
+		  util.ApplicationLog.Printf("walletId received %v\n",walletId)
+		  objectId, _ := primitive.ObjectIDFromHex(walletId)
+
+
+		  var activationRequest dto.ActivationRequest
+		  if err := c.ShouldBindJSON(&activationRequest); err != nil {
+			  util.ApplicationLog.Printf("Error binding Json Obj %v\n", err)
+			  util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
+			  return
+		  }
+
+		  var walletToUpdate models.Wallet
+
+		  filter := bson.D{{"_id", objectId}}
+		  err := walletCollection.FindOne(ctx, filter).Decode(&walletToUpdate)
+		  if err == mongo.ErrNoDocuments {
+			  util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
+			  return
+		  } else if err != nil {
+			  util.GenerateInternalServerErrorResponse(c, err.Error())
+			  return
+		  }
+
+		  walletToUpdate.ActivationStatus = activationRequest.Active
+
+		  singleResult := walletCollection.FindOneAndReplace(ctx, filter, walletToUpdate)
+		  err = singleResult.Err()
+		  if err == mongo.ErrNoDocuments {
+			  util.GenerateBadRequestResponse(c, err.Error())
+		  } else if err != nil {
+			  util.GenerateInternalServerErrorResponse(c, err.Error())
+		  }
+
+		  util.GenerateJSONResponse(c, http.StatusOK, "Success", gin.H{
+			  "wallet": singleResult,
+		  })
+	  }
+  }

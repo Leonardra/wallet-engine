@@ -10,5 +10,7 @@ func WalletRouter(router *gin.Engine){
 	{
 		walletRoutes.POST("/", handlers.CreateWallet())
 		walletRoutes.PATCH("/debit", handlers.DebitWallet())
+		walletRoutes.PATCH("/credit", handlers.CreditWallet())
+		walletRoutes.PATCH("/:walletId/active/", handlers.ChangeActivationStatus())
 	}
 }
