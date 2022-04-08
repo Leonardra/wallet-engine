@@ -31,20 +31,15 @@ func DebitWallet() gin.HandlerFunc{
 		}
 
 
-		var walletToUpdate models.Wallet
-
 		filter := bson.D{{"_id", objectId}}
-		err := walletCollection.FindOne(ctx, filter).Decode(&walletToUpdate)
-		if err == mongo.ErrNoDocuments {
-			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
-			return
-		} else if err != nil {
-			util.GenerateInternalServerErrorResponse(c, err.Error())
+		foundResult, done := findWallet(c, ctx, filter)
+		if done {
 			return
 		}
 
-		wallet, err := debitFromWallet(walletToUpdate, transaction)
+		wallet, err := debitFromWallet(foundResult, transaction)
 		if err != nil {
+			util.GenerateBadRequestResponse(c, err.Error())
 			return
 		}
 
@@ -56,20 +51,27 @@ func DebitWallet() gin.HandlerFunc{
 			util.GenerateInternalServerErrorResponse(c, err.Error())
 		}
 
-
-		var foundResult models.Wallet
-		err = walletCollection.FindOne(ctx, filter).Decode(&foundResult)
-		if err == mongo.ErrNoDocuments {
-			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
-			return
-		} else if err != nil {
-			util.GenerateInternalServerErrorResponse(c, err.Error())
+		foundWallet, done := findWallet(c, ctx, filter)
+		if done {
 			return
 		}
 		util.GenerateJSONResponse(c, http.StatusOK, "Success", gin.H{
-			"wallet": foundResult,
+			"wallet": foundWallet,
 		})
 	}
+}
+
+func findWallet(c *gin.Context, ctx context.Context, filter bson.D) (models.Wallet, bool) {
+	var foundResult models.Wallet
+	err := walletCollection.FindOne(ctx, filter).Decode(&foundResult)
+	if err == mongo.ErrNoDocuments {
+		util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
+		return models.Wallet{}, true
+	} else if err != nil {
+		util.GenerateInternalServerErrorResponse(c, err.Error())
+		return models.Wallet{}, true
+	}
+	return foundResult, false
 }
 
 func CreditWallet()gin.HandlerFunc{
@@ -89,20 +91,15 @@ func CreditWallet()gin.HandlerFunc{
 		}
 
 
-		var walletToUpdate models.Wallet
-
 		filter := bson.D{{"_id", objectId}}
-		err := walletCollection.FindOne(ctx, filter).Decode(&walletToUpdate)
-		if err == mongo.ErrNoDocuments {
-			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
-			return
-		} else if err != nil {
-			util.GenerateInternalServerErrorResponse(c, err.Error())
+		walletToUpdate, done := findWallet(c, ctx, filter)
+		if done {
 			return
 		}
 
 		wallet, err := creditWallet(walletToUpdate, transaction)
 		if err != nil {
+			util.GenerateBadRequestResponse(c, err.Error())
 			return
 		}
 
@@ -115,17 +112,12 @@ func CreditWallet()gin.HandlerFunc{
 		}
 
 
-		var foundResult models.Wallet
-		err = walletCollection.FindOne(ctx, filter).Decode(&foundResult)
-		if err == mongo.ErrNoDocuments {
-			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
-			return
-		} else if err != nil {
-			util.GenerateInternalServerErrorResponse(c, err.Error())
+		foundWallet, done := findWallet(c, ctx, filter)
+		if done {
 			return
 		}
 		util.GenerateJSONResponse(c, http.StatusOK, "Success", gin.H{
-			"wallet": foundResult,
+			"wallet": foundWallet,
 		})
 
 	}
@@ -138,7 +130,8 @@ func creditWallet(wallet models.Wallet, transaction *models.Transaction)(*models
 	if wallet.ActivationStatus == true {
 		wallet.Balance = wallet.Balance + transaction.Amount
 		util.ApplicationLog.Printf("New Balance%v\n", wallet.Balance)
-
+	}else{
+		return &wallet, errors.New("wallet must be activated")
 	}
 	return &wallet, nil
 }
@@ -150,6 +143,8 @@ func debitFromWallet(wallet models.Wallet, transaction *models.Transaction) (*mo
 	}
 	if wallet.ActivationStatus == true {
 		wallet.Balance = wallet.Balance - transaction.Amount
+	}else{
+		return &wallet, errors.New("wallet must be activated")
 	}
 	return &wallet, nil
 }
