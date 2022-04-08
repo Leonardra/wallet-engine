@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -39,7 +38,7 @@ func CreateWallet() gin.HandlerFunc{
 		wallet.Id = primitive.NewObjectID()
 		wallet.DateCreated = time.Now().Local()
 		wallet.AccountNumber = util.GenerateAccountNumber()
-		wallet.Balance = decimal.RequireFromString("0.0")
+		wallet.Balance = 0.0
 		wallet.ActivationStatus = true
 		util.ApplicationLog.Printf("wallet before saving %v\n", wallet)
 
@@ -51,8 +50,19 @@ func CreateWallet() gin.HandlerFunc{
 			return
 		}
 
+
+		var foundWallet models.Wallet
+		filter := bson.D{{"_id", savedWallet.InsertedID}}
+		err = walletCollection.FindOne(ctx, filter).Decode(&foundWallet)
+		if err == mongo.ErrNoDocuments {
+			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
+			return
+		} else if err != nil {
+			util.GenerateInternalServerErrorResponse(c, err.Error())
+		}
+
 		util.GenerateJSONResponse(c, http.StatusCreated, "Success", gin.H{
-			"wallet": savedWallet,
+			"wallet": foundWallet,
 		})
 	}
 }
