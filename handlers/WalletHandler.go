@@ -1,113 +1,106 @@
 package handlers
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
-	"time"
-	"walletEngine/configs"
-	"walletEngine/data/models"
 	"walletEngine/dto"
+	"walletEngine/service"
 	"walletEngine/util"
 )
-  var walletCollection = configs.GetCollection(configs.DbClient, "wallets")
-  var validate = validator.New()
+type Handler struct {
+	walletService 		service.WalletService
+	validate			validator.Validate
+}
 
-func CreateWallet() gin.HandlerFunc{
 
+
+func CreateWalletHandler(walletService service.WalletService) Handler {
+	return Handler{walletService, *validator.New()}
+}
+
+
+func (handler *Handler) CreateWallet() gin.HandlerFunc{
 	return func(c *gin.Context){
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 
-		var wallet models.Wallet
-		if err := c.ShouldBindJSON(&wallet); err != nil {
+		var walletRequest dto.WalletRequest
+		if err := c.ShouldBindJSON(&walletRequest); err != nil {
 			util.ApplicationLog.Printf("Error binding Json Obj %v\n", err)
 			util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
 			return
 		}
-		if validationErr := validate.Struct(&wallet); validationErr != nil {
+		if validationErr := handler.validate.Struct(&walletRequest); validationErr != nil {
 			util.ApplicationLog.Println("validation error")
 			util.GenerateBadRequestResponse(c, validationErr.Error())
 			return
 		}
 
-		wallet.Id = primitive.NewObjectID()
-		wallet.DateCreated = time.Now().Local()
-		wallet.AccountNumber = util.GenerateAccountNumber()
-		wallet.Balance = 0.0
-		wallet.ActivationStatus = true
-		util.ApplicationLog.Printf("wallet before saving %v\n", wallet)
-
-		savedWallet, err := walletCollection.InsertOne(ctx, wallet)
-
+		wallet, err := handler.walletService.CreateWallet(walletRequest)
 		if err != nil {
-			util.ApplicationLog.Printf("Error Saving wallet %v\n", err)
 			util.GenerateInternalServerErrorResponse(c, err.Error())
 			return
-		}
-
-
-		var foundWallet models.Wallet
-		filter := bson.D{{"_id", savedWallet.InsertedID}}
-		err = walletCollection.FindOne(ctx, filter).Decode(&foundWallet)
-		if err == mongo.ErrNoDocuments {
-			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
-			return
-		} else if err != nil {
-			util.GenerateInternalServerErrorResponse(c, err.Error())
 		}
 
 		util.GenerateJSONResponse(c, http.StatusCreated, "Success", gin.H{
-			"wallet": foundWallet,
+			"wallet": wallet,
 		})
 	}
 }
 
-  func ChangeActivationStatus()gin.HandlerFunc{
-	  return func(c *gin.Context){
-		  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		  defer cancel()
 
-		  walletId := c.Param("walletId")
-		  util.ApplicationLog.Printf("walletId received %v\n",walletId)
-		  objectId, _ := primitive.ObjectIDFromHex(walletId)
+func (handler *Handler) GetWallet() gin.HandlerFunc{
+	return func(c *gin.Context){
+		walletId := c.Param("walletId")
+		util.ApplicationLog.Printf("walletId received %v\n",walletId)
+		objectId, _ := primitive.ObjectIDFromHex(walletId)
+
+		wallet, err := handler.walletService.GetWallet(objectId)
+		if err != nil {
+			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
+			return
+		}
+
+		util.GenerateJSONResponse(c, http.StatusFound, "Found", gin.H{
+			"wallet": wallet,
+		})
+	}
+}
+
+func (handler *Handler) ChangeActivationStatus()gin.HandlerFunc{
+	return func(c *gin.Context){
+
+		walletId := c.Param("walletId")
+		util.ApplicationLog.Printf("walletId received %v\n",walletId)
+		objectId, _ := primitive.ObjectIDFromHex(walletId)
 
 
-		  var activationRequest dto.ActivationRequest
-		  if err := c.ShouldBindJSON(&activationRequest); err != nil {
-			  util.ApplicationLog.Printf("Error binding Json Obj %v\n", err)
-			  util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
-			  return
-		  }
+		var activationRequest dto.ActivationRequest
+		if err := c.ShouldBindJSON(&activationRequest); err != nil {
+			util.ApplicationLog.Printf("Error binding Json Obj %v\n", err)
+			util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
+			return
+		}
 
-		  var walletToUpdate models.Wallet
+		walletToUpdate, err :=  handler.walletService.GetWallet(objectId)
+		if err != nil {
+			util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
+			return
+		}
 
-		  filter := bson.D{{"_id", objectId}}
-		  err := walletCollection.FindOne(ctx, filter).Decode(&walletToUpdate)
-		  if err == mongo.ErrNoDocuments {
-			  util.GenerateJSONResponse(c, http.StatusNotFound, "Not Found", gin.H{})
-			  return
-		  } else if err != nil {
-			  util.GenerateInternalServerErrorResponse(c, err.Error())
-			  return
-		  }
+		walletToUpdate.ActivationStatus = activationRequest.Active
 
-		  walletToUpdate.ActivationStatus = activationRequest.Active
+		updateWallet, err := handler.walletService.UpdateWallet(walletToUpdate.Id, walletToUpdate)
+		if err != nil {
+			util.GenerateBadRequestResponse(c, err.Error())
+			return
+		}
 
-		  singleResult := walletCollection.FindOneAndReplace(ctx, filter, walletToUpdate)
-		  err = singleResult.Err()
-		  if err == mongo.ErrNoDocuments {
-			  util.GenerateBadRequestResponse(c, err.Error())
-		  } else if err != nil {
-			  util.GenerateInternalServerErrorResponse(c, err.Error())
-		  }
 
-		  util.GenerateJSONResponse(c, http.StatusOK, "Success", gin.H{
-			  "wallet": singleResult,
-		  })
-	  }
-  }
+		util.GenerateJSONResponse(c, http.StatusFound, "Found", gin.H{
+			"wallet": updateWallet,
+		})
+
+	}
+}
+
