@@ -5,12 +5,22 @@ import (
 	"walletEngine/handlers"
 )
 
-func WalletRouter(router *gin.Engine){
+type Router struct{
+	walletHandler  handlers.Handler
+	transactionHandler handlers.TransactionHandler
+}
+
+func CreateRouter (walletHandler  handlers.Handler, transactionHandler handlers.TransactionHandler) Router{
+	return Router{walletHandler, transactionHandler}
+}
+
+func (appRouter *Router) WalletRouter (router *gin.Engine){
 	walletRoutes := router.Group("api/v1/wallet")
 	{
-		walletRoutes.POST("/", handlers.CreateWallet())
-		walletRoutes.PATCH("/:walletId/debit", handlers.DebitWallet())
-		walletRoutes.PATCH("/:walletId/credit", handlers.CreditWallet())
-		walletRoutes.PATCH("/:walletId/active/", handlers.ChangeActivationStatus())
+		walletRoutes.POST("/", appRouter.walletHandler.CreateWallet())
+		walletRoutes.GET("/:walletId", appRouter.walletHandler.GetWallet())
+		walletRoutes.PATCH("/:walletId/debit", appRouter.transactionHandler.DebitWallet())
+		walletRoutes.PATCH("/:walletId/credit", appRouter.transactionHandler.CreditWallet())
+		walletRoutes.PATCH("/:walletId/active/", appRouter.walletHandler.ChangeActivationStatus())
 	}
 }

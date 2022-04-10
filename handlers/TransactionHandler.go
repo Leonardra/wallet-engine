@@ -100,6 +100,5 @@ func (transactionHandler *TransactionHandler) CreditWallet() gin.HandlerFunc {
 			"wallet": updateWallet,
 		})
 
-
 	}
 }
