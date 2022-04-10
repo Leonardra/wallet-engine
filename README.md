@@ -6,13 +6,13 @@ Wallet Engine is a simple REST Application built with the Gin-Gonic framework. I
 * Credit Wallet
 * Activate and Deactivate Wallet
 
-#Prerequisites
+﻿# Prerequisites
 ***
 * MongoDb Compass
 * Postman
 * Go
 ***
-#Installation
+﻿# Installation
 ```shell
 $ git clone https://github.com/Leonardra/wallet-engine
 $ cd wallet-engine/
@@ -22,18 +22,18 @@ $ go get -v -d
 ***
 
 
-#Tools
+﻿# Tools
 * Testify: assertion library for unit testing
 * Gin-Gonic : Web service framework.
 * Mongo Db : Database
 
-#Rest API Usage
+﻿# Rest API Usage
 ***
 
-##Create Wallet
-> #### P0ST http://localhost:8080/api/v1/wallet/
+﻿## Create Wallet
+> ﻿#### P0ST http://localhost:8080/api/v1/wallet/
 
-#####Parameter
+﻿##### Parameter
  ```json
   {
   "firstName":"John",
@@ -41,8 +41,8 @@ $ go get -v -d
  }
 ```
 
-##Response
-####201 Created on successful request
+﻿## Response
+﻿#### 201 Created on successful request
 
 ```json
   {
@@ -64,18 +64,18 @@ $ go get -v -d
 
 ```
 
-##Credit Wallet
-> #### P0ST http://localhost:8080/api/v1/wallet/{walletId}/credit
+﻿## Credit Wallet
+> ﻿#### P0ST http://localhost:8080/api/v1/wallet/{walletId}/credit
 
-#####Parameter
+﻿##### Parameter
  ```json
   {
   "amount":200000.00
  }
 ```
 
-##Response
-####200 OK on successful request
+﻿## Response
+﻿#### 200 OK on successful request
 
 ```json
   {
@@ -96,18 +96,18 @@ $ go get -v -d
  }
 ```
 
-##Debit Wallet
-> #### P0ST http://localhost:8080/api/v1/wallet/{walletId}/debit
+﻿## Debit Wallet
+> ﻿#### P0ST http://localhost:8080/api/v1/wallet/{walletId}/debit
 
-#####Parameter
+﻿##### Parameter
  ```json
   {
   "amount":100000.00
  }
 ```
 
-##Response
-####200 OK on successful request
+﻿## Response
+﻿#### 200 OK on successful request
 
 ```json
   {
@@ -128,23 +128,23 @@ $ go get -v -d
  }
 ```
 
-##Activate/Deactivate Wallet
-> #### P0ST http://localhost:8080/api/v1/wallet/{walletId}/active/
+﻿## Activate/Deactivate Wallet
+> ﻿#### P0ST http://localhost:8080/api/v1/wallet/{walletId}/active/
 
 
-##Key
+﻿## Key
 * Activate: true
 * Deactivate: false
 
-#####Parameter
+﻿#### Parameter
  ```json
   {
   "active":false
  }
 ```
 
-##Response
-####200 OK on successful request
+﻿## Response
+﻿#### 200 OK on successful request
 
 ```json
   {
