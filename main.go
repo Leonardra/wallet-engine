@@ -10,10 +10,16 @@ import (
 	"syscall"
 	"time"
 	"walletEngine/configs"
+	"walletEngine/data/repository"
+	"walletEngine/handlers"
 	"walletEngine/routes"
+	"walletEngine/service"
 	"walletEngine/util"
 )
 
+var(
+	appRouter routes.Router
+)
 func main() {
 
 	router := gin.Default()
@@ -23,7 +29,7 @@ func main() {
 		c.String(200, "pong")
 	})
 
-	routes.WalletRouter(router)
+	appRouter.WalletRouter(router)
 
 	err := router.Run()
 
@@ -61,3 +67,13 @@ func main() {
 
 	util.ApplicationLog.Println("Server exiting....")
 }
+
+func init() {
+	appRepository :=repository.CreateMongoRepository()
+	walletService := service.CreateWalletService(appRepository)
+	transactionService := service.CreateTransactionService(appRepository)
+	walletHandler := handlers.CreateWalletHandler(walletService)
+	transactionHandler := handlers.CreateTransactionHandler(&transactionService, walletService)
+	appRouter = routes.CreateRouter(walletHandler,transactionHandler)
+}
+
