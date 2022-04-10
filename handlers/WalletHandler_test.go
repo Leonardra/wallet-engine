@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"walletEngine/configs"
-	"walletEngine/dto"
+	"walletEngine/response"
 	"walletEngine/util"
 )
 
@@ -53,7 +53,7 @@ func Test_createWallet(t *testing.T){
 	createWalletHandler := CreateWallet()
 	createWalletHandler(ctx)
 
-	var response dto.APIResponse
+	var response response.APIResponse
 	responseString := w.Body.String()
 	err := json.Unmarshal([]byte(responseString), &response)
 	if err != nil {
@@ -81,7 +81,7 @@ func Test_thatCreateWalletThrowsErrorWhenRequiredFieldsAreMissing(t *testing.T) 
 	createWalletHandler := CreateWallet()
 	createWalletHandler(ctx)
 
-	var response dto.APIResponse
+	var response response.APIResponse
 	responseString := w.Body.String()
 	err := json.Unmarshal([]byte(responseString), &response)
 	if err != nil {

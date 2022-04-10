@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"walletEngine/dto"
+	"walletEngine/response"
 )
 
 var ApplicationLog = log.New(os.Stdout, "[wallet-service] ", log.LstdFlags)
 
 func GenerateJSONResponse(c *gin.Context, statusCode int, message string, data map[string]interface{}) {
-	c.JSON(statusCode, dto.APIResponse{
+	c.JSON(statusCode, response.APIResponse{
 		Status:    statusCode,
 		Message:   message,
 		Timestamp: time.Now(),
@@ -21,7 +21,7 @@ func GenerateJSONResponse(c *gin.Context, statusCode int, message string, data m
 }
 
 func GenerateInternalServerErrorResponse(c *gin.Context, message string) {
-	c.JSON(http.StatusInternalServerError, dto.APIResponse{
+	c.JSON(http.StatusInternalServerError, response.APIResponse{
 		Status:    http.StatusInternalServerError,
 		Message:   message,
 		Timestamp: time.Now(),
@@ -30,7 +30,7 @@ func GenerateInternalServerErrorResponse(c *gin.Context, message string) {
 }
 
 func GenerateBadRequestResponse(c *gin.Context, message string) {
-	c.JSON(http.StatusBadRequest, dto.APIResponse{
+	c.JSON(http.StatusBadRequest, response.APIResponse{
 		Status:    http.StatusBadRequest,
 		Message:   message,
 		Timestamp: time.Now(),

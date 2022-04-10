@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 	"walletEngine/configs"
+	"walletEngine/data/models"
 	"walletEngine/dto"
-	"walletEngine/models"
 	"walletEngine/util"
 )
   var walletCollection = configs.GetCollection(configs.DbClient, "wallets")

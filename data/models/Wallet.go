@@ -17,7 +17,7 @@ type Wallet struct{
 }
 
 
-func  CreateWalletInstance(firstName string, lastName string) *Wallet{
+func  CreateWalletInstance(firstName string, lastName string) *Wallet {
 	 wallet := new(Wallet)
 	 wallet.Id = primitive.NewObjectID()
 	 wallet.FirstName = firstName

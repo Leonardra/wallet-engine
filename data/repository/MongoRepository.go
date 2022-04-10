@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 	"walletEngine/configs"
-	"walletEngine/models"
+	"walletEngine/data/models"
 	"walletEngine/util"
 )
 

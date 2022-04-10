@@ -9,7 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"time"
-	"walletEngine/models"
+	"walletEngine/data/models"
+	"walletEngine/dto"
 	"walletEngine/util"
 )
 
@@ -23,7 +24,7 @@ func DebitWallet() gin.HandlerFunc{
 		util.ApplicationLog.Printf("walletId received %v\n", walletId)
 		objectId, _ := primitive.ObjectIDFromHex(walletId)
 
-		transaction := new(models.Transaction)
+		transaction := new(dto.Transaction)
 		if err := c.ShouldBindJSON(&transaction); err != nil {
 			util.ApplicationLog.Printf("Error binding Json Obj %v\n", err)
 			util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
@@ -83,7 +84,7 @@ func CreditWallet()gin.HandlerFunc{
 		util.ApplicationLog.Printf("walletId received %v\n", walletId)
 		objectId, _ := primitive.ObjectIDFromHex(walletId)
 
-		transaction := new(models.Transaction)
+		transaction := new(dto.Transaction)
 		if err := c.ShouldBindJSON(&transaction); err != nil {
 			util.ApplicationLog.Printf("Error binding Json Obj %v\n", err)
 			util.GenerateJSONResponse(c, http.StatusBadRequest, err.Error(), gin.H{})
@@ -123,7 +124,7 @@ func CreditWallet()gin.HandlerFunc{
 	}
 }
 
-func creditWallet(wallet models.Wallet, transaction *models.Transaction)(*models.Wallet, error){
+func creditWallet(wallet models.Wallet, transaction *dto.Transaction)(*models.Wallet, error){
 	if transaction.Amount <= 0.0{
 		return &wallet, errors.New("credit amount cannot be negative number")
 	}
@@ -137,7 +138,7 @@ func creditWallet(wallet models.Wallet, transaction *models.Transaction)(*models
 }
 
 
-func debitFromWallet(wallet models.Wallet, transaction *models.Transaction) (*models.Wallet, error){
+func debitFromWallet(wallet models.Wallet, transaction *dto.Transaction) (*models.Wallet, error){
 	if transaction.Amount > wallet.Balance{
 		return &wallet, errors.New("debit amount cannot exceed balance")
 	}
